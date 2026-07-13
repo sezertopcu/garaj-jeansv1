@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -33,7 +33,7 @@ type SupabaseProduct = {
   created_at: string;
 };
 
-export default function ProductsPage() {
+function ProductsPageContent() {
   const searchParams = useSearchParams();
 
   const categoryFromUrl =
@@ -634,5 +634,39 @@ export default function ProductsPage() {
         }
       `}</style>
     </>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense
+      fallback={
+        <>
+          <Navbar />
+          <main
+            style={{
+              minHeight: "70vh",
+              background: "#f5f3ee",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "10px",
+                fontWeight: 800,
+                letterSpacing: "4px",
+              }}
+            >
+              ÜRÜNLER YÜKLENİYOR
+            </span>
+          </main>
+          <Footer />
+        </>
+      }
+    >
+      <ProductsPageContent />
+    </Suspense>
   );
 }
