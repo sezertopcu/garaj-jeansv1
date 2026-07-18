@@ -116,7 +116,7 @@ export default function HomePage() {
                 <span className="contact-eyebrow">02 · İLETİŞİM</span>
 
                 <a
-                  href="https://www.instagram.com/garaj_jeanss/"
+                  href="https://www.instagram.com/garaj_jeanss1/"
                   target="_blank"
                   rel="noreferrer"
                   className="instagram-link"
