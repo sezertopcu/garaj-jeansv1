@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { CartProvider } from "@/components/CartContext";
+import VisitorTracker from "@/components/VisitorTracker";
 
 export const metadata: Metadata = {
   title: "Garaj Jeans | Erkek Giyim",
@@ -16,6 +17,7 @@ export default function RootLayout({
   return (
     <html lang="tr" data-scroll-behavior="smooth">
       <body>
+        <VisitorTracker />
         <CartProvider>{children}</CartProvider>
       </body>
     </html>

@@ -14,6 +14,7 @@ import {
   ShoppingBag,
   Truck,
   UserRound,
+  Users,
 } from "lucide-react";
 import AdminProductForm from "@/components/AdminProductForm";
 import AdminProductTable from "@/components/AdminProductTable";
@@ -169,6 +170,7 @@ export default function AdminPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [activeVisitorCount, setActiveVisitorCount] = useState(0);
 
   const [editingProduct, setEditingProduct] =
     useState<Product | null>(null);
@@ -213,6 +215,7 @@ export default function AdminPage() {
         loadProducts(),
         loadOrders(),
         loadMessages(),
+        loadActiveVisitors(),
       ]);
 
       if (mounted) {
@@ -273,6 +276,38 @@ export default function AdminPage() {
       supabase.removeChannel(channel);
     };
   }, [authorized]);
+
+  useEffect(() => {
+    if (!authorized) {
+      return;
+    }
+
+    loadActiveVisitors();
+
+    const intervalId = window.setInterval(() => {
+      loadActiveVisitors();
+    }, 10000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [authorized]);
+
+  async function loadActiveVisitors() {
+    const { data, error } = await supabase.rpc(
+      "count_active_visitors"
+    );
+
+    if (error) {
+      console.error(
+        "Aktif ziyaretçi sayısı alınamadı:",
+        error
+      );
+      return;
+    }
+
+    setActiveVisitorCount(Number(data ?? 0));
+  }
 
   async function loadProducts() {
     const { data, error } = await supabase
@@ -851,6 +886,17 @@ export default function AdminPage() {
                   {unreadMessageCount}
                 </strong>
               </div>
+
+              <div className="stat-card">
+                <Users
+                  size={25}
+                  strokeWidth={1.5}
+                />
+
+                <span>AKTİF ZİYARETÇİ</span>
+
+                <strong>{activeVisitorCount}</strong>
+              </div>
             </div>
 
             <div className="dashboard-bottom">
@@ -1358,7 +1404,10 @@ export default function AdminPage() {
 
         .stats-grid {
           display: grid;
-          grid-template-columns: repeat(4, 1fr);
+          grid-template-columns: repeat(
+            auto-fit,
+            minmax(190px, 1fr)
+          );
           gap: 16px;
         }
 
