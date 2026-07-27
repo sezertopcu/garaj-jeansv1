@@ -21,14 +21,34 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   return (
     <article className="product-card">
-      <Link href={`/urunler/${product.id}`} className="product-image">
+      <Link
+        href={`/urunler/${product.id}`}
+        className="product-image"
+        style={{
+          position: "relative",
+          width: "100%",
+          height: "360px",
+          minHeight: "360px",
+          maxHeight: "360px",
+          display: "block",
+          overflow: "hidden",
+          background: "#dedbd4",
+        }}
+      >
         {product.image ? (
-          <div
-            className="product-photo"
-            role="img"
-            aria-label={product.name}
+          <img
+            src={product.image}
+            alt={product.name}
             style={{
-              backgroundImage: `url("${product.image}")`,
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              minHeight: "100%",
+              maxHeight: "100%",
+              display: "block",
+              objectFit: "cover",
+              objectPosition: "center",
             }}
           />
         ) : (
@@ -69,7 +89,17 @@ export default function ProductCard({ product }: ProductCardProps) {
         )}
       </Link>
 
-      <div className="product-info">
+      <div
+        className="product-info"
+        style={{
+          display: "block",
+          visibility: "visible",
+          opacity: 1,
+          height: "auto",
+          overflow: "visible",
+          padding: "20px 2px 0",
+        }}
+      >
         <div className="product-top">
           <div className="product-title">
             <span className="product-category">
@@ -128,26 +158,26 @@ export default function ProductCard({ product }: ProductCardProps) {
         .product-image {
           position: relative;
           width: 100%;
-          height: 420px;
+          height: 360px;
+          min-height: 360px;
+          max-height: 360px;
           display: block;
           background: #dedbd4;
           overflow: hidden;
         }
 
-        .product-photo {
-          position: absolute;
-          inset: 0;
+        .product-image img {
           width: 100%;
           height: 100%;
-          background-position: center;
-          background-repeat: no-repeat;
-          background-size: cover;
+          display: block;
+          object-fit: cover;
+          object-position: center;
           transform: scale(1.001);
           transition: transform 0.8s
             cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
-        .product-card:hover .product-photo {
+        .product-card:hover .product-image img {
           transform: scale(1.07);
         }
 
@@ -170,8 +200,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         }
 
         .image-empty {
-          position: absolute;
-          inset: 0;
+          position: relative;
           width: 100%;
           height: 100%;
           display: flex;
@@ -418,9 +447,11 @@ export default function ProductCard({ product }: ProductCardProps) {
           gap: 11px;
         }
 
-        @media (max-width: 1000px) {
+        @media (max-width: 750px) {
           .product-image {
-            height: 370px;
+            height: 300px !important;
+            min-height: 300px !important;
+            max-height: 300px !important;
           }
         }
 
@@ -430,7 +461,9 @@ export default function ProductCard({ product }: ProductCardProps) {
           }
 
           .product-image {
-            height: 330px;
+            height: 260px !important;
+            min-height: 260px !important;
+            max-height: 260px !important;
           }
 
           .product-info {
@@ -481,7 +514,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
         @media (prefers-reduced-motion: reduce) {
           .product-card,
-          .product-photo,
+          .product-image img,
           .empty-logo,
           .explore-button,
           .hover-text,
