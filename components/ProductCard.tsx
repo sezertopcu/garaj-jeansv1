@@ -1,8 +1,7 @@
 "use client";
 
-import { MouseEvent, useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight, X } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import type { Product } from "@/types/product";
 import { calculateDiscount, formatPrice } from "@/lib/utils";
 
@@ -20,55 +19,11 @@ export default function ProductCard({ product }: ProductCardProps) {
     typeof product.discountPrice === "number" &&
     product.discountPrice < product.price;
 
-  const [imageOpen, setImageOpen] = useState(false);
-
-  function openImage(event: MouseEvent<HTMLButtonElement>) {
-    event.preventDefault();
-    event.stopPropagation();
-    setImageOpen(true);
-  }
-
-  function closeImage() {
-    setImageOpen(false);
-  }
-
-  function closeFromBackdrop(event: MouseEvent<HTMLDivElement>) {
-    if (event.target === event.currentTarget) {
-      closeImage();
-    }
-  }
-
-  useEffect(() => {
-    if (!imageOpen) return;
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    function handleEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") closeImage();
-    }
-
-    window.addEventListener("keydown", handleEscape);
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", handleEscape);
-    };
-  }, [imageOpen]);
-
   return (
-    <>
     <article className="product-card">
-      <div className="product-image">
+      <Link href={`/urunler/${product.id}`} className="product-image">
         {product.image ? (
-          <button
-            type="button"
-            className="image-button"
-            onClick={openImage}
-            aria-label={`${product.name} görselini büyüt`}
-          >
-            <img src={product.image} alt={product.name} />
-          </button>
+          <img src={product.image} alt={product.name} />
         ) : (
           <div className="image-empty">
             <div className="empty-logo">
@@ -105,7 +60,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             <span>TÜKENDİ</span>
           </div>
         )}
-      </div>
+      </Link>
 
       <div className="product-info">
         <div className="product-top">
@@ -172,17 +127,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           overflow: hidden;
         }
 
-        .image-button {
-          width: 100%;
-          height: 100%;
-          padding: 0;
-          border: 0;
-          display: block;
-          background: transparent;
-          cursor: zoom-in;
-        }
-
-        .image-button img {
+        .product-image img {
           width: 100%;
           height: 100%;
           display: block;
@@ -193,7 +138,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
-        .product-card:hover .image-button img {
+        .product-card:hover .product-image img {
           transform: scale(1.07);
         }
 
@@ -399,7 +344,6 @@ export default function ProductCard({ product }: ProductCardProps) {
         }
 
         .product-top h3 {
-          min-height: 47px;
           margin: 0;
           font-size: 18px;
           font-weight: 750;
@@ -474,7 +418,6 @@ export default function ProductCard({ product }: ProductCardProps) {
           }
 
           .product-top h3 {
-            min-height: 39px;
             font-size: 15px;
           }
 
@@ -518,7 +461,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
         @media (prefers-reduced-motion: reduce) {
           .product-card,
-          .image-button img,
+          .product-image img,
           .empty-logo,
           .explore-button,
           .hover-text,
@@ -532,124 +475,5 @@ export default function ProductCard({ product }: ProductCardProps) {
         }
       `}</style>
     </article>
-
-    {imageOpen && product.image && (
-      <div
-        className="image-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-label={`${product.name} büyük görsel`}
-        onClick={closeFromBackdrop}
-      >
-        <button
-          type="button"
-          className="modal-close"
-          onClick={closeImage}
-          aria-label="Görseli kapat"
-        >
-          <X size={26} strokeWidth={1.7} />
-        </button>
-
-        <div className="modal-image-area">
-          <img
-            src={product.image}
-            alt={product.name}
-            draggable={false}
-          />
-        </div>
-
-        <div className="modal-info">
-          <span>{product.category}</span>
-          <strong>{product.name}</strong>
-          <small>İki parmağınla büyütüp küçültebilirsin</small>
-        </div>
-
-        <style jsx>{`
-          .image-modal {
-            position: fixed;
-            inset: 0;
-            z-index: 9999;
-            padding: max(16px, env(safe-area-inset-top)) 16px
-              max(16px, env(safe-area-inset-bottom));
-            background: rgba(0, 0, 0, 0.95);
-            color: #ffffff;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            overflow: auto;
-            overscroll-behavior: contain;
-            touch-action: pinch-zoom;
-          }
-
-          .modal-close {
-            position: fixed;
-            top: max(18px, env(safe-area-inset-top));
-            right: 18px;
-            z-index: 3;
-            width: 48px;
-            height: 48px;
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            border-radius: 50%;
-            background: rgba(17, 17, 17, 0.72);
-            color: #ffffff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-          }
-
-          .modal-image-area {
-            width: 100%;
-            min-height: 0;
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            touch-action: pinch-zoom;
-          }
-
-          .modal-image-area img {
-            width: auto;
-            max-width: 100%;
-            height: auto;
-            max-height: calc(100dvh - 145px);
-            display: block;
-            object-fit: contain;
-            user-select: none;
-            touch-action: pinch-zoom;
-          }
-
-          .modal-info {
-            width: 100%;
-            padding-top: 14px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-            text-align: center;
-          }
-
-          .modal-info span {
-            color: #909090;
-            font-size: 8px;
-            font-weight: 800;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-          }
-
-          .modal-info strong {
-            font-size: 14px;
-          }
-
-          .modal-info small {
-            margin-top: 3px;
-            color: #777777;
-            font-size: 9px;
-          }
-        `}</style>
-      </div>
-    )}
-    </>
   );
 }

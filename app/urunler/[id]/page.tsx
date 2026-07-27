@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { TouchEvent, use, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -9,7 +9,9 @@ import {
   ChevronRight,
   Minus,
   Plus,
+  RotateCcw,
   ShoppingBag,
+  X,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -53,6 +55,41 @@ export default function ProductDetailPage({
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [imageViewerOpen, setImageViewerOpen] = useState(false);
+  const [imageScale, setImageScale] = useState(1);
+  const [imagePosition, setImagePosition] = useState({
+    x: 0,
+    y: 0,
+  });
+
+  const pinchStartDistance = useRef<number | null>(null);
+  const pinchStartScale = useRef(1);
+  const lastTouchPoint = useRef<{
+    x: number;
+    y: number;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!imageViewerOpen) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        closeImageViewer();
+      }
+    }
+
+    window.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [imageViewerOpen]);
 
   useEffect(() => {
     async function loadProduct() {
@@ -237,6 +274,131 @@ export default function ProductDetailPage({
     ? currentProduct.discountPrice!
     : currentProduct.price;
 
+  function resetImageZoom() {
+    setImageScale(1);
+    setImagePosition({
+      x: 0,
+      y: 0,
+    });
+    pinchStartDistance.current = null;
+    pinchStartScale.current = 1;
+    lastTouchPoint.current = null;
+  }
+
+  function openImageViewer() {
+    resetImageZoom();
+    setImageViewerOpen(true);
+  }
+
+  function closeImageViewer() {
+    setImageViewerOpen(false);
+    resetImageZoom();
+  }
+
+  function getTouchDistance(
+    touches: TouchEvent<HTMLDivElement>["touches"]
+  ) {
+    const firstTouch = touches[0];
+    const secondTouch = touches[1];
+
+    return Math.hypot(
+      secondTouch.clientX - firstTouch.clientX,
+      secondTouch.clientY - firstTouch.clientY
+    );
+  }
+
+  function handleViewerTouchStart(
+    event: TouchEvent<HTMLDivElement>
+  ) {
+    if (event.touches.length === 2) {
+      pinchStartDistance.current = getTouchDistance(
+        event.touches
+      );
+      pinchStartScale.current = imageScale;
+      lastTouchPoint.current = null;
+      return;
+    }
+
+    if (event.touches.length === 1) {
+      lastTouchPoint.current = {
+        x: event.touches[0].clientX,
+        y: event.touches[0].clientY,
+      };
+    }
+  }
+
+  function handleViewerTouchMove(
+    event: TouchEvent<HTMLDivElement>
+  ) {
+    if (
+      event.touches.length === 2 &&
+      pinchStartDistance.current
+    ) {
+      event.preventDefault();
+
+      const currentDistance = getTouchDistance(
+        event.touches
+      );
+
+      const nextScale = Math.min(
+        4,
+        Math.max(
+          1,
+          pinchStartScale.current *
+            (currentDistance /
+              pinchStartDistance.current)
+        )
+      );
+
+      setImageScale(nextScale);
+
+      if (nextScale === 1) {
+        setImagePosition({
+          x: 0,
+          y: 0,
+        });
+      }
+
+      return;
+    }
+
+    if (
+      event.touches.length === 1 &&
+      lastTouchPoint.current &&
+      imageScale > 1
+    ) {
+      event.preventDefault();
+
+      const currentPoint = {
+        x: event.touches[0].clientX,
+        y: event.touches[0].clientY,
+      };
+
+      setImagePosition((current) => ({
+        x:
+          current.x +
+          currentPoint.x -
+          lastTouchPoint.current!.x,
+        y:
+          current.y +
+          currentPoint.y -
+          lastTouchPoint.current!.y,
+      }));
+
+      lastTouchPoint.current = currentPoint;
+    }
+  }
+
+  function handleViewerTouchEnd(
+    event: TouchEvent<HTMLDivElement>
+  ) {
+    if (event.touches.length === 0) {
+      pinchStartDistance.current = null;
+      lastTouchPoint.current = null;
+      pinchStartScale.current = imageScale;
+    }
+  }
+
   function handlePreviousImage() {
     if (productImages.length <= 1) {
       return;
@@ -296,10 +458,17 @@ export default function ProductDetailPage({
           <div className="product-gallery">
             <div className="product-visual">
               {selectedImage ? (
-                <img
-                  src={selectedImage}
-                  alt={currentProduct.name}
-                />
+                <button
+                  type="button"
+                  className="main-image-button"
+                  onClick={openImageViewer}
+                  aria-label="Ürün fotoğrafını büyüt"
+                >
+                  <img
+                    src={selectedImage}
+                    alt={currentProduct.name}
+                  />
+                </button>
               ) : (
                 <div className="image-empty">
                   <span>GARAJ</span>
@@ -512,6 +681,94 @@ export default function ProductDetailPage({
         </div>
       </main>
 
+      {imageViewerOpen && selectedImage && (
+        <div
+          className="image-viewer"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${currentProduct.name} büyük fotoğraf`}
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              closeImageViewer();
+            }
+          }}
+          onTouchStart={handleViewerTouchStart}
+          onTouchMove={handleViewerTouchMove}
+          onTouchEnd={handleViewerTouchEnd}
+          onTouchCancel={handleViewerTouchEnd}
+        >
+          <button
+            type="button"
+            className="viewer-close"
+            onClick={closeImageViewer}
+            aria-label="Fotoğrafı kapat"
+          >
+            <X size={27} />
+          </button>
+
+          <div className="viewer-stage">
+            <img
+              src={selectedImage}
+              alt={currentProduct.name}
+              draggable={false}
+              style={{
+                transform: `translate3d(${imagePosition.x}px, ${imagePosition.y}px, 0) scale(${imageScale})`,
+              }}
+            />
+          </div>
+
+          <div className="viewer-controls">
+            <button
+              type="button"
+              onClick={() => {
+                const nextScale = Math.max(
+                  1,
+                  imageScale - 0.5
+                );
+                setImageScale(nextScale);
+
+                if (nextScale === 1) {
+                  setImagePosition({
+                    x: 0,
+                    y: 0,
+                  });
+                }
+              }}
+              disabled={imageScale <= 1}
+              aria-label="Fotoğrafı küçült"
+            >
+              <Minus size={19} />
+            </button>
+
+            <strong>
+              %{Math.round(imageScale * 100)}
+            </strong>
+
+            <button
+              type="button"
+              onClick={() =>
+                setImageScale((current) =>
+                  Math.min(4, current + 0.5)
+                )
+              }
+              disabled={imageScale >= 4}
+              aria-label="Fotoğrafı büyüt"
+            >
+              <Plus size={19} />
+            </button>
+
+            <button
+              type="button"
+              onClick={resetImageZoom}
+              aria-label="Fotoğrafı sıfırla"
+            >
+              <RotateCcw size={18} />
+            </button>
+          </div>
+
+        </div>
+      )}
+
       <Footer />
 
       <style jsx>{`
@@ -538,6 +795,16 @@ export default function ProductDetailPage({
           min-height: 720px;
           background: #dedbd4;
           overflow: hidden;
+        }
+
+        .main-image-button {
+          width: 100%;
+          height: 720px;
+          padding: 0;
+          border: 0;
+          display: block;
+          background: transparent;
+          cursor: zoom-in;
         }
 
         .product-visual img {
@@ -810,6 +1077,89 @@ export default function ProductDetailPage({
           font-size: 12px;
         }
 
+        .image-viewer {
+          position: fixed;
+          inset: 0;
+          z-index: 9999;
+          padding: 18px;
+          background: rgba(0, 0, 0, 0.96);
+          color: #ffffff;
+          display: flex;
+          flex-direction: column;
+          touch-action: none;
+          overscroll-behavior: contain;
+        }
+
+        .viewer-close {
+          position: absolute;
+          top: 22px;
+          right: 22px;
+          z-index: 5;
+          width: 50px;
+          height: 50px;
+          border: 1px solid rgba(255, 255, 255, 0.35);
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.08);
+          color: #ffffff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+        }
+
+        .viewer-stage {
+          min-height: 0;
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+        }
+
+        .viewer-stage img {
+          width: auto;
+          max-width: 94vw;
+          height: auto;
+          max-height: calc(100vh - 150px);
+          display: block;
+          object-fit: contain;
+          user-select: none;
+          transform-origin: center center;
+          will-change: transform;
+        }
+
+        .viewer-controls {
+          min-height: 52px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+        }
+
+        .viewer-controls button {
+          width: 42px;
+          height: 42px;
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.08);
+          color: #ffffff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+        }
+
+        .viewer-controls button:disabled {
+          cursor: not-allowed;
+          opacity: 0.3;
+        }
+
+        .viewer-controls strong {
+          min-width: 60px;
+          font-size: 11px;
+          text-align: center;
+        }
+
         @media (max-width: 850px) {
           .product-container {
             grid-template-columns: 1fr;
@@ -840,8 +1190,26 @@ export default function ProductDetailPage({
             min-height: 500px;
           }
 
+          .main-image-button,
           .product-visual img {
             height: 500px;
+          }
+
+          .image-viewer {
+            padding:
+              max(12px, env(safe-area-inset-top))
+              12px
+              max(12px, env(safe-area-inset-bottom));
+          }
+
+          .viewer-close {
+            top: max(14px, env(safe-area-inset-top));
+            right: 14px;
+          }
+
+          .viewer-stage img {
+            max-width: 100%;
+            max-height: calc(100dvh - 145px);
           }
 
           .thumbnail-list {
