@@ -128,7 +128,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         .product-image {
           position: relative;
           width: 100%;
-          aspect-ratio: 4 / 5;
+          height: 420px;
           display: block;
           background: #dedbd4;
           overflow: hidden;
@@ -170,7 +170,8 @@ export default function ProductCard({ product }: ProductCardProps) {
         }
 
         .image-empty {
-          position: relative;
+          position: absolute;
+          inset: 0;
           width: 100%;
           height: 100%;
           display: flex;
@@ -417,9 +418,19 @@ export default function ProductCard({ product }: ProductCardProps) {
           gap: 11px;
         }
 
+        @media (max-width: 1000px) {
+          .product-image {
+            height: 370px;
+          }
+        }
+
         @media (max-width: 600px) {
           .product-card:hover {
             transform: none;
+          }
+
+          .product-image {
+            height: 330px;
           }
 
           .product-info {
