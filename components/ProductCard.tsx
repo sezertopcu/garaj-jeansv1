@@ -121,15 +121,22 @@ export default function ProductCard({ product }: ProductCardProps) {
         .product-image {
           position: relative;
           width: 100%;
-          height: 345px;
+          height: 0 !important;
+          min-height: 0 !important;
+          max-height: none !important;
+          padding-top: 125% !important;
           display: block;
           background: #dedbd4;
           overflow: hidden;
         }
 
         .product-image img {
+          position: absolute;
+          inset: 0;
           width: 100%;
-          height: 100%;
+          height: 100% !important;
+          min-height: 0 !important;
+          max-height: none !important;
           display: block;
           object-fit: cover;
           object-position: center;
@@ -161,7 +168,8 @@ export default function ProductCard({ product }: ProductCardProps) {
         }
 
         .image-empty {
-          position: relative;
+          position: absolute;
+          inset: 0;
           width: 100%;
           height: 100%;
           display: flex;
@@ -411,10 +419,6 @@ export default function ProductCard({ product }: ProductCardProps) {
         @media (max-width: 600px) {
           .product-card:hover {
             transform: none;
-          }
-
-          .product-image {
-            height: 260px;
           }
 
           .product-info {
