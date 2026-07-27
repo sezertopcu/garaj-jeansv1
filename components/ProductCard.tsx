@@ -23,7 +23,14 @@ export default function ProductCard({ product }: ProductCardProps) {
     <article className="product-card">
       <Link href={`/urunler/${product.id}`} className="product-image">
         {product.image ? (
-          <img src={product.image} alt={product.name} />
+          <div
+            className="product-photo"
+            role="img"
+            aria-label={product.name}
+            style={{
+              backgroundImage: `url("${product.image}")`,
+            }}
+          />
         ) : (
           <div className="image-empty">
             <div className="empty-logo">
@@ -121,31 +128,26 @@ export default function ProductCard({ product }: ProductCardProps) {
         .product-image {
           position: relative;
           width: 100%;
-          height: 0 !important;
-          min-height: 0 !important;
-          max-height: none !important;
-          padding-top: 125% !important;
+          aspect-ratio: 4 / 5;
           display: block;
           background: #dedbd4;
           overflow: hidden;
         }
 
-        .product-image img {
+        .product-photo {
           position: absolute;
           inset: 0;
           width: 100%;
-          height: 100% !important;
-          min-height: 0 !important;
-          max-height: none !important;
-          display: block;
-          object-fit: cover;
-          object-position: center;
+          height: 100%;
+          background-position: center;
+          background-repeat: no-repeat;
+          background-size: cover;
           transform: scale(1.001);
           transition: transform 0.8s
             cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
-        .product-card:hover .product-image img {
+        .product-card:hover .product-photo {
           transform: scale(1.07);
         }
 
@@ -168,8 +170,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         }
 
         .image-empty {
-          position: absolute;
-          inset: 0;
+          position: relative;
           width: 100%;
           height: 100%;
           display: flex;
@@ -469,7 +470,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
         @media (prefers-reduced-motion: reduce) {
           .product-card,
-          .product-image img,
+          .product-photo,
           .empty-logo,
           .explore-button,
           .hover-text,
