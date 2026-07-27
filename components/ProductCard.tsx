@@ -121,7 +121,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         .product-image {
           position: relative;
           width: 100%;
-          aspect-ratio: 4 / 5;
+          height: 345px;
           display: block;
           background: #dedbd4;
           overflow: hidden;
@@ -411,6 +411,10 @@ export default function ProductCard({ product }: ProductCardProps) {
         @media (max-width: 600px) {
           .product-card:hover {
             transform: none;
+          }
+
+          .product-image {
+            height: 260px;
           }
 
           .product-info {
