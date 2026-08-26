@@ -27,18 +27,11 @@ const categories = [
     number: "03",
   },
   {
-    name: "AYAKKABI",
-    description: "Şehir stilinin son dokunuşu.",
-    image: "/images/ayakkabi.webp",
-    href: "/urunler?kategori=ayakkabi",
-    number: "04",
-  },
-  {
     name: "AKSESUAR",
     description: "Detaylarda kendini göster.",
     image: "/images/aksesuar.webp",
     href: "/urunler?kategori=aksesuar",
-    number: "05",
+    number: "04",
   },
 ];
 
@@ -156,7 +149,7 @@ export default function CategorySection() {
         .category-grid {
           width: 100%;
           display: grid;
-          grid-template-columns: repeat(6, 1fr);
+          grid-template-columns: repeat(2, minmax(0, 1fr));
           gap: 14px;
           justify-content: center;
         }
@@ -168,26 +161,6 @@ export default function CategorySection() {
           min-width: 0;
           overflow: hidden;
           background: #111111;
-        }
-
-        .category-card:nth-child(1) {
-          grid-column: 1 / span 2;
-        }
-
-        .category-card:nth-child(2) {
-          grid-column: 3 / span 2;
-        }
-
-        .category-card:nth-child(3) {
-          grid-column: 5 / span 2;
-        }
-
-        .category-card:nth-child(4) {
-          grid-column: 2 / span 2;
-        }
-
-        .category-card:nth-child(5) {
-          grid-column: 4 / span 2;
         }
 
         .category-link {
@@ -377,8 +350,7 @@ export default function CategorySection() {
             gap: 8px;
           }
 
-          .category-card,
-          .category-card:nth-child(5) {
+          .category-card {
             grid-column: auto;
             width: 100%;
             aspect-ratio: 1 / 1;

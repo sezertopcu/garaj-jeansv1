@@ -26,8 +26,6 @@ export default function ProductGrid({
 
         <p>
           Bu kategoride şu anda yayınlanmış aktif ürün bulunamadı.
-          <br />
-          Yeni ürünler çok yakında burada.
         </p>
 
         <span className="empty-bottom">

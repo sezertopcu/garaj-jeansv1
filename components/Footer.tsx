@@ -25,7 +25,7 @@ export default function Footer() {
               className="instagram-link"
             >
               <Camera size={18} strokeWidth={1.7} />
-              @garaj_jeanss
+              @garaj_jeanss1
             </a>
           </div>
 
@@ -44,7 +44,6 @@ export default function Footer() {
             <Link href="/urunler?kategori=jean">Jean</Link>
             <Link href="/urunler?kategori=tshirt">T-Shirt</Link>
             <Link href="/urunler?kategori=ceket">Ceket</Link>
-            <Link href="/urunler?kategori=ayakkabi">Ayakkabı</Link>
             <Link href="/urunler?kategori=aksesuar">Aksesuar</Link>
           </div>
 

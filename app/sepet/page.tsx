@@ -264,7 +264,7 @@ export default function CartPage() {
               </Link>
 
               <p className="payment-note">
-                Güvenli ödeme altyapısı iyzico ile sağlanacaktır.
+                Güvenli ödeme altyapısı kullanılmaktadır.
               </p>
             </aside>
           </div>

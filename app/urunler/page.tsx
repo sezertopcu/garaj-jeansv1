@@ -13,8 +13,7 @@ const categories = [
   { name: "Jean", slug: "jean", number: "01" },
   { name: "T-Shirt", slug: "tshirt", number: "02" },
   { name: "Ceket", slug: "ceket", number: "03" },
-  { name: "Ayakkabı", slug: "ayakkabi", number: "04" },
-  { name: "Aksesuar", slug: "aksesuar", number: "05" },
+  { name: "Aksesuar", slug: "aksesuar", number: "04" },
 ];
 
 type SupabaseProduct = {
