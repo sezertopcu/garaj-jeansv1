@@ -1,7 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { Camera, MapPin, Phone } from "lucide-react";
+import { Camera, Mail, MapPin, Phone } from "lucide-react";
 
 export default function Footer() {
   return (
@@ -47,6 +48,16 @@ export default function Footer() {
             <Link href="/urunler?kategori=aksesuar">Aksesuar</Link>
           </div>
 
+          <div className="footer-column">
+            <span>YASAL</span>
+
+            <Link href="/gizlilik-politikasi">Gizlilik Politikası</Link>
+            <Link href="/teslimat-ve-iade">Teslimat ve İade</Link>
+            <Link href="/mesafeli-satis-sozlesmesi">
+              Mesafeli Satış Sözleşmesi
+            </Link>
+          </div>
+
           <div className="footer-column contact-column">
             <span>MAĞAZA</span>
 
@@ -56,7 +67,7 @@ export default function Footer() {
               <p>
                 Yakut Plaza Kat 1
                 <br />
-                No: 31-32 Garaj Jeans
+                No: 31 Garaj Jeans
                 <br />
                 Erzurum, Türkiye
               </p>
@@ -65,16 +76,40 @@ export default function Footer() {
             <div className="contact-item">
               <Phone size={18} strokeWidth={1.6} />
 
-              <a href="tel:+905347869870">
-                0 534 786 98 70
+              <a href="tel:+905347869870">0 534 786 98 70</a>
+            </div>
+
+            <div className="contact-item">
+              <Mail size={18} strokeWidth={1.6} />
+
+              <a href="mailto:kilic2551@gmail.com">
+                kilic2551@gmail.com
               </a>
             </div>
           </div>
         </div>
 
+        <div className="payment-area">
+          <div className="payment-copy">
+            <span>GÜVENLİ ÖDEME</span>
+            <p>
+              Ödemeleriniz güvenli ödeme altyapısı üzerinden gerçekleştirilir.
+            </p>
+          </div>
+
+          <div className="payment-logo-wrap">
+            <Image
+              src="/images/payment-methods-iyzico.png"
+              alt="iyzico ile Öde, Mastercard, Visa, American Express ve Troy"
+              width={858}
+              height={64}
+              className="payment-logo"
+            />
+          </div>
+        </div>
+
         <div className="footer-bottom">
           <p>© 2026 GARAJ JEANS. TÜM HAKLARI SAKLIDIR.</p>
-
           <p>ERZURUM · TÜRKİYE</p>
         </div>
       </div>
@@ -93,8 +128,8 @@ export default function Footer() {
 
         .footer-top {
           display: grid;
-          grid-template-columns: 1.5fr 0.7fr 0.7fr 1fr;
-          gap: 70px;
+          grid-template-columns: 1.4fr 0.65fr 0.7fr 0.95fr 1.1fr;
+          gap: 48px;
         }
 
         .footer-brand {
@@ -163,6 +198,7 @@ export default function Footer() {
         .footer-column > a {
           color: #999999;
           font-size: 13px;
+          line-height: 1.45;
           transition: color 0.2s ease;
         }
 
@@ -197,10 +233,52 @@ export default function Footer() {
           color: #ffffff;
         }
 
-        .footer-bottom {
-          margin-top: 80px;
-          padding-top: 25px;
+        .payment-area {
+          margin-top: 70px;
+          padding: 28px 0;
           border-top: 1px solid #292929;
+          border-bottom: 1px solid #292929;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 40px;
+        }
+
+        .payment-copy {
+          min-width: 210px;
+        }
+
+        .payment-copy > span {
+          display: block;
+          margin-bottom: 8px;
+          color: #ffffff;
+          font-size: 9px;
+          font-weight: 800;
+          letter-spacing: 3px;
+        }
+
+        .payment-copy p {
+          max-width: 390px;
+          color: #666666;
+          font-size: 11px;
+          line-height: 1.65;
+        }
+
+        .payment-logo-wrap {
+          width: min(100%, 560px);
+          display: flex;
+          justify-content: flex-end;
+        }
+
+        .payment-logo {
+          width: 100%;
+          height: auto;
+          object-fit: contain;
+        }
+
+        .footer-bottom {
+          margin-top: 25px;
+          padding-top: 0;
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -214,13 +292,25 @@ export default function Footer() {
           letter-spacing: 2px;
         }
 
-        @media (max-width: 950px) {
+        @media (max-width: 1100px) {
           .footer-top {
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(3, 1fr);
           }
         }
 
-        @media (max-width: 600px) {
+        @media (max-width: 800px) {
+          .payment-area {
+            align-items: flex-start;
+            flex-direction: column;
+          }
+
+          .payment-logo-wrap {
+            width: 100%;
+            justify-content: flex-start;
+          }
+        }
+
+        @media (max-width: 650px) {
           .footer {
             padding-top: 65px;
           }
@@ -234,8 +324,16 @@ export default function Footer() {
             gap: 50px;
           }
 
+          .payment-area {
+            margin-top: 55px;
+          }
+
+          .payment-logo {
+            max-width: 100%;
+          }
+
           .footer-bottom {
-            margin-top: 60px;
+            margin-top: 25px;
             align-items: flex-start;
             flex-direction: column;
           }
