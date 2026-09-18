@@ -28,6 +28,7 @@ export default function PaymentPage() {
 
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  const [identityNumber, setIdentityNumber] = useState("");
   const [city, setCity] = useState("");
   const [district, setDistrict] = useState("");
   const [address, setAddress] = useState("");
@@ -76,20 +77,19 @@ export default function PaymentPage() {
     loadUser();
   }, [router]);
 
-  function handleContinuePayment() {
-    if (
-      !fullName.trim() ||
-      !phone.trim() ||
-      !city.trim() ||
-      !district.trim() ||
-      !address.trim()
-    ) {
-      alert("Lütfen tüm teslimat bilgilerini doldurun.");
+  async function handleContinuePayment() {
+    if (!fullName.trim() || !phone.trim() || !identityNumber.trim() || !city.trim() || !district.trim() || !address.trim()) {
+      alert("Lütfen tüm teslimat ve ödeme bilgilerini doldurun.");
       return;
     }
 
     if (phone.replace(/\D/g, "").length < 10) {
       alert("Telefon numarasını kontrol edin.");
+      return;
+    }
+
+    if (!/^\d{11}$/.test(identityNumber.trim())) {
+      alert("T.C. Kimlik Numaranızı 11 haneli olarak girin.");
       return;
     }
 
@@ -101,13 +101,48 @@ export default function PaymentPage() {
 
     setChecking(true);
 
-    window.setTimeout(() => {
-      setChecking(false);
+    try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-      alert(
-        "Teslimat bilgileri hazır. Şimdi iyzico ödeme sistemini bağlayacağız."
-      );
-    }, 700);
+      if (sessionError || !session?.access_token) {
+        alert("Oturumunuz sona ermiş. Lütfen tekrar giriş yapın.");
+        router.push("/giris?redirect=/odeme");
+        return;
+      }
+
+      const response = await fetch("/api/iyzico/initialize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          accessToken: session.access_token,
+          fullName: fullName.trim(),
+          phone: phone.trim(),
+          identityNumber: identityNumber.trim(),
+          city: city.trim(),
+          district: district.trim(),
+          address: address.trim(),
+          addressTitle: addressTitle.trim(),
+          items: items.map((item) => ({
+            productId: item.product.id,
+            size: item.size,
+            quantity: item.quantity,
+          })),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data?.success || !data?.paymentPageUrl) {
+        throw new Error(data?.message || "Ödeme sayfası başlatılamadı.");
+      }
+
+      window.location.href = data.paymentPageUrl;
+    } catch (error) {
+      console.error("Ödeme başlatma hatası:", error);
+      alert(error instanceof Error ? error.message : "Ödeme başlatılırken bir hata oluştu.");
+    } finally {
+      setChecking(false);
+    }
   }
 
   if (loading) {
@@ -307,6 +342,24 @@ export default function PaymentPage() {
                       setPhone(event.target.value)
                     }
                     placeholder="05XX XXX XX XX"
+                  />
+                </div>
+
+                <div className="field">
+                  <label>T.C. Kimlik No</label>
+
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={11}
+                    value={identityNumber}
+                    onChange={(event) =>
+                      setIdentityNumber(
+                        event.target.value.replace(/\D/g, "").slice(0, 11)
+                      )
+                    }
+                    placeholder="11 haneli T.C. Kimlik No"
+                    autoComplete="off"
                   />
                 </div>
 
