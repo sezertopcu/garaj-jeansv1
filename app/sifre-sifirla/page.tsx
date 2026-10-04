@@ -31,20 +31,73 @@ export default function ResetPasswordPage() {
   useEffect(() => {
     let mounted = true;
 
-    async function checkRecoverySession() {
+    async function initializeRecovery() {
       try {
+        const url = new URL(window.location.href);
+
+        const code = url.searchParams.get("code");
+
+        if (code) {
+          const { data, error } =
+            await supabase.auth.exchangeCodeForSession(code);
+
+          if (error) {
+            throw error;
+          }
+
+          if (!mounted) {
+            return;
+          }
+
+          if (data.session) {
+            setValidSession(true);
+
+            window.history.replaceState(
+              {},
+              document.title,
+              "/sifre-sifirla"
+            );
+          }
+
+          return;
+        }
+
         const { data } = await supabase.auth.getSession();
 
-        if (!mounted) return;
+        if (!mounted) {
+          return;
+        }
 
         if (data.session) {
+          setValidSession(true);
+          return;
+        }
+
+        await new Promise((resolve) =>
+          window.setTimeout(resolve, 800)
+        );
+
+        if (!mounted) {
+          return;
+        }
+
+        const { data: secondCheck } =
+          await supabase.auth.getSession();
+
+        if (secondCheck.session) {
           setValidSession(true);
         }
       } catch (error) {
         console.error(
-          "Şifre sıfırlama oturumu kontrol hatası:",
+          "Şifre sıfırlama bağlantısı işlenemedi:",
           error
         );
+
+        if (mounted) {
+          setErrorMessage(
+            "Şifre sıfırlama bağlantısı geçersiz veya süresi dolmuş olabilir."
+          );
+        }
       } finally {
         if (mounted) {
           setChecking(false);
@@ -52,21 +105,25 @@ export default function ResetPasswordPage() {
       }
     }
 
-    checkRecoverySession();
-
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!mounted) return;
+    } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (!mounted) {
+          return;
+        }
 
-      if (
-        event === "PASSWORD_RECOVERY" ||
-        (event === "SIGNED_IN" && session)
-      ) {
-        setValidSession(true);
-        setChecking(false);
+        if (
+          event === "PASSWORD_RECOVERY" ||
+          (event === "SIGNED_IN" && session)
+        ) {
+          setValidSession(true);
+          setChecking(false);
+        }
       }
-    });
+    );
+
+    initializeRecovery();
 
     return () => {
       mounted = false;
@@ -97,6 +154,17 @@ export default function ResetPasswordPage() {
     try {
       setLoading(true);
 
+      const { data: sessionData } =
+        await supabase.auth.getSession();
+
+      if (!sessionData.session) {
+        setValidSession(false);
+        setErrorMessage(
+          "Şifre sıfırlama oturumunun süresi dolmuş. Lütfen yeni bir bağlantı isteyin."
+        );
+        return;
+      }
+
       const { error } = await supabase.auth.updateUser({
         password,
       });
@@ -119,7 +187,10 @@ export default function ResetPasswordPage() {
         router.refresh();
       }, 2000);
     } catch (error) {
-      console.error("Yeni şifre belirleme hatası:", error);
+      console.error(
+        "Yeni şifre belirleme hatası:",
+        error
+      );
 
       setErrorMessage(
         error instanceof Error
@@ -165,6 +236,7 @@ export default function ResetPasswordPage() {
                     size={22}
                     strokeWidth={1.7}
                   />
+
                   <p>{message}</p>
                 </div>
               )}
@@ -207,7 +279,9 @@ export default function ResetPasswordPage() {
                           placeholder="Yeni şifreniz"
                           value={password}
                           onChange={(event) =>
-                            setPassword(event.target.value)
+                            setPassword(
+                              event.target.value
+                            )
                           }
                           minLength={6}
                           autoComplete="new-password"
@@ -288,7 +362,9 @@ export default function ResetPasswordPage() {
               <button
                 type="button"
                 className="back-login"
-                onClick={() => router.push("/giris")}
+                onClick={() =>
+                  router.push("/giris")
+                }
               >
                 Giriş sayfasına dön
               </button>
