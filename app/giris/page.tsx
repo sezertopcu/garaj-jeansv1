@@ -9,19 +9,19 @@ import {
   Loader2,
   LogIn,
   UserPlus,
+  KeyRound,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Button from "@/components/Button";
 import { supabase } from "@/lib/supabase";
 
+type AuthMode = "login" | "register" | "forgot";
+
 export default function LoginPage() {
   const router = useRouter();
 
-  const [mode, setMode] = useState<"login" | "register">(
-    "login"
-  );
-
+  const [mode, setMode] = useState<AuthMode>("login");
   const [showPassword, setShowPassword] = useState(false);
 
   const [fullName, setFullName] = useState("");
@@ -33,10 +33,57 @@ export default function LoginPage() {
   const [message, setMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  function changeMode(newMode: "login" | "register") {
+  function changeMode(newMode: AuthMode) {
     setMode(newMode);
     setMessage("");
     setErrorMessage("");
+    setShowPassword(false);
+  }
+
+  async function handleForgotPassword(
+    event: FormEvent<HTMLFormElement>
+  ) {
+    event.preventDefault();
+
+    const cleanEmail = email.trim().toLowerCase();
+
+    setMessage("");
+    setErrorMessage("");
+
+    if (!cleanEmail) {
+      setErrorMessage("Lütfen e-posta adresinizi girin.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        cleanEmail,
+        {
+          redirectTo:
+            "https://www.garajjeans.com/sifre-sifirla",
+        }
+      );
+
+      if (error) {
+        throw error;
+      }
+
+      setMessage(
+        "Şifre sıfırlama bağlantısı e-posta adresinize gönderildi. Gelen kutunuzu kontrol edin."
+      );
+    } catch (error) {
+      console.error("Şifre sıfırlama hatası:", error);
+
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Şifre sıfırlama bağlantısı gönderilemedi."
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -196,199 +243,299 @@ export default function LoginPage() {
           </section>
 
           <section className="auth-box">
-            <div className="auth-tabs">
-              <button
-                type="button"
-                className={mode === "login" ? "active" : ""}
-                onClick={() => changeMode("login")}
-              >
-                <LogIn size={17} strokeWidth={1.7} />
-                Giriş Yap
-              </button>
+            {mode !== "forgot" && (
+              <div className="auth-tabs">
+                <button
+                  type="button"
+                  className={mode === "login" ? "active" : ""}
+                  onClick={() => changeMode("login")}
+                >
+                  <LogIn size={17} strokeWidth={1.7} />
+                  Giriş Yap
+                </button>
 
-              <button
-                type="button"
-                className={
-                  mode === "register" ? "active" : ""
-                }
-                onClick={() => changeMode("register")}
-              >
-                <UserPlus size={17} strokeWidth={1.7} />
-                Kayıt Ol
-              </button>
-            </div>
+                <button
+                  type="button"
+                  className={
+                    mode === "register" ? "active" : ""
+                  }
+                  onClick={() => changeMode("register")}
+                >
+                  <UserPlus size={17} strokeWidth={1.7} />
+                  Kayıt Ol
+                </button>
+              </div>
+            )}
 
             <div className="auth-content">
-              <span className="auth-label">
-                {mode === "login"
-                  ? "TEKRAR HOŞ GELDİN"
-                  : "GARAJ'A KATIL"}
-              </span>
-
-              <h2>
-                {mode === "login"
-                  ? "Hesabına Gir."
-                  : "Hesabını Oluştur."}
-              </h2>
-
-              {message && (
-                <div className="success-message">
-                  <CheckCircle2
-                    size={22}
-                    strokeWidth={1.7}
-                  />
-
-                  <p>{message}</p>
-                </div>
-              )}
-
-              {errorMessage && (
-                <div className="error-message">
-                  <p>{errorMessage}</p>
-                </div>
-              )}
-
-              <form onSubmit={handleSubmit}>
-                {mode === "register" && (
-                  <div className="field">
-                    <label>Ad Soyad</label>
-
-                    <input
-                      type="text"
-                      placeholder="Adınız ve soyadınız"
-                      value={fullName}
-                      onChange={(event) =>
-                        setFullName(event.target.value)
-                      }
-                      autoComplete="name"
-                      required
-                    />
+              {mode === "forgot" ? (
+                <>
+                  <div className="forgot-icon">
+                    <KeyRound size={24} strokeWidth={1.6} />
                   </div>
-                )}
 
-                <div className="field">
-                  <label>E-posta</label>
+                  <span className="auth-label">
+                    ŞİFRE SIFIRLAMA
+                  </span>
 
-                  <input
-                    type="email"
-                    placeholder="ornek@mail.com"
-                    value={email}
-                    onChange={(event) =>
-                      setEmail(event.target.value)
-                    }
-                    autoComplete="email"
-                    required
-                  />
-                </div>
+                  <h2>Şifreni Yenile.</h2>
 
-                <div className="field">
-                  <label>Şifre</label>
+                  <p className="forgot-description">
+                    Hesabında kullandığın e-posta adresini
+                    gir. Şifreni yenileyebilmen için sana
+                    güvenli bir bağlantı göndereceğiz.
+                  </p>
 
-                  <div className="password-field">
-                    <input
-                      type={
-                        showPassword ? "text" : "password"
-                      }
-                      placeholder="Şifreniz"
-                      value={password}
-                      onChange={(event) =>
-                        setPassword(event.target.value)
-                      }
-                      autoComplete={
-                        mode === "login"
-                          ? "current-password"
-                          : "new-password"
-                      }
-                      minLength={6}
-                      required
-                    />
+                  {message && (
+                    <div className="success-message">
+                      <CheckCircle2
+                        size={22}
+                        strokeWidth={1.7}
+                      />
+                      <p>{message}</p>
+                    </div>
+                  )}
+
+                  {errorMessage && (
+                    <div className="error-message">
+                      <p>{errorMessage}</p>
+                    </div>
+                  )}
+
+                  <form onSubmit={handleForgotPassword}>
+                    <div className="field">
+                      <label>E-posta</label>
+
+                      <input
+                        type="email"
+                        placeholder="ornek@mail.com"
+                        value={email}
+                        onChange={(event) =>
+                          setEmail(event.target.value)
+                        }
+                        autoComplete="email"
+                        required
+                      />
+                    </div>
+
+                    <Button
+                      type="submit"
+                      fullWidth
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <span className="loading-button">
+                          <Loader2
+                            size={18}
+                            strokeWidth={1.8}
+                          />
+                          Gönderiliyor
+                        </span>
+                      ) : (
+                        "Sıfırlama Bağlantısı Gönder"
+                      )}
+                    </Button>
+                  </form>
+
+                  <p className="auth-switch">
+                    Şifreni hatırladın mı?
+
+                    <button
+                      type="button"
+                      onClick={() => changeMode("login")}
+                    >
+                      Giriş Yap
+                    </button>
+                  </p>
+                </>
+              ) : (
+                <>
+                  <span className="auth-label">
+                    {mode === "login"
+                      ? "TEKRAR HOŞ GELDİN"
+                      : "GARAJ'A KATIL"}
+                  </span>
+
+                  <h2>
+                    {mode === "login"
+                      ? "Hesabına Gir."
+                      : "Hesabını Oluştur."}
+                  </h2>
+
+                  {message && (
+                    <div className="success-message">
+                      <CheckCircle2
+                        size={22}
+                        strokeWidth={1.7}
+                      />
+
+                      <p>{message}</p>
+                    </div>
+                  )}
+
+                  {errorMessage && (
+                    <div className="error-message">
+                      <p>{errorMessage}</p>
+                    </div>
+                  )}
+
+                  <form onSubmit={handleSubmit}>
+                    {mode === "register" && (
+                      <div className="field">
+                        <label>Ad Soyad</label>
+
+                        <input
+                          type="text"
+                          placeholder="Adınız ve soyadınız"
+                          value={fullName}
+                          onChange={(event) =>
+                            setFullName(event.target.value)
+                          }
+                          autoComplete="name"
+                          required
+                        />
+                      </div>
+                    )}
+
+                    <div className="field">
+                      <label>E-posta</label>
+
+                      <input
+                        type="email"
+                        placeholder="ornek@mail.com"
+                        value={email}
+                        onChange={(event) =>
+                          setEmail(event.target.value)
+                        }
+                        autoComplete="email"
+                        required
+                      />
+                    </div>
+
+                    <div className="field">
+                      <div className="password-label-row">
+                        <label>Şifre</label>
+
+                        {mode === "login" && (
+                          <button
+                            type="button"
+                            className="forgot-link"
+                            onClick={() =>
+                              changeMode("forgot")
+                            }
+                          >
+                            Şifremi Unuttum
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="password-field">
+                        <input
+                          type={
+                            showPassword ? "text" : "password"
+                          }
+                          placeholder="Şifreniz"
+                          value={password}
+                          onChange={(event) =>
+                            setPassword(event.target.value)
+                          }
+                          autoComplete={
+                            mode === "login"
+                              ? "current-password"
+                              : "new-password"
+                          }
+                          minLength={6}
+                          required
+                        />
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setShowPassword(
+                              (current) => !current
+                            )
+                          }
+                          aria-label={
+                            showPassword
+                              ? "Şifreyi gizle"
+                              : "Şifreyi göster"
+                          }
+                        >
+                          {showPassword ? (
+                            <EyeOff
+                              size={19}
+                              strokeWidth={1.7}
+                            />
+                          ) : (
+                            <Eye
+                              size={19}
+                              strokeWidth={1.7}
+                            />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    {mode === "register" && (
+                      <div className="field">
+                        <label>Telefon</label>
+
+                        <input
+                          type="tel"
+                          placeholder="05XX XXX XX XX"
+                          value={phone}
+                          onChange={(event) =>
+                            setPhone(event.target.value)
+                          }
+                          autoComplete="tel"
+                          required
+                        />
+                      </div>
+                    )}
+
+                    <Button
+                      type="submit"
+                      fullWidth
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <span className="loading-button">
+                          <Loader2
+                            size={18}
+                            strokeWidth={1.8}
+                          />
+                          İşlem Yapılıyor
+                        </span>
+                      ) : mode === "login" ? (
+                        "Giriş Yap"
+                      ) : (
+                        "Hesap Oluştur"
+                      )}
+                    </Button>
+                  </form>
+
+                  <p className="auth-switch">
+                    {mode === "login"
+                      ? "Henüz hesabın yok mu?"
+                      : "Zaten hesabın var mı?"}
 
                     <button
                       type="button"
                       onClick={() =>
-                        setShowPassword(
-                          (current) => !current
+                        changeMode(
+                          mode === "login"
+                            ? "register"
+                            : "login"
                         )
                       }
-                      aria-label={
-                        showPassword
-                          ? "Şifreyi gizle"
-                          : "Şifreyi göster"
-                      }
                     >
-                      {showPassword ? (
-                        <EyeOff
-                          size={19}
-                          strokeWidth={1.7}
-                        />
-                      ) : (
-                        <Eye
-                          size={19}
-                          strokeWidth={1.7}
-                        />
-                      )}
+                      {mode === "login"
+                        ? "Kayıt Ol"
+                        : "Giriş Yap"}
                     </button>
-                  </div>
-                </div>
-
-                {mode === "register" && (
-                  <div className="field">
-                    <label>Telefon</label>
-
-                    <input
-                      type="tel"
-                      placeholder="05XX XXX XX XX"
-                      value={phone}
-                      onChange={(event) =>
-                        setPhone(event.target.value)
-                      }
-                      autoComplete="tel"
-                      required
-                    />
-                  </div>
-                )}
-
-                <Button
-                  type="submit"
-                  fullWidth
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <span className="loading-button">
-                      <Loader2
-                        size={18}
-                        strokeWidth={1.8}
-                      />
-                      İşlem Yapılıyor
-                    </span>
-                  ) : mode === "login" ? (
-                    "Giriş Yap"
-                  ) : (
-                    "Hesap Oluştur"
-                  )}
-                </Button>
-              </form>
-
-              <p className="auth-switch">
-                {mode === "login"
-                  ? "Henüz hesabın yok mu?"
-                  : "Zaten hesabın var mı?"}
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    changeMode(
-                      mode === "login"
-                        ? "register"
-                        : "login"
-                    )
-                  }
-                >
-                  {mode === "login"
-                    ? "Kayıt Ol"
-                    : "Giriş Yap"}
-                </button>
-              </p>
+                  </p>
+                </>
+              )}
             </div>
           </section>
         </div>
@@ -495,6 +642,24 @@ export default function LoginPage() {
           letter-spacing: -3px;
         }
 
+        .forgot-icon {
+          width: 48px;
+          height: 48px;
+          margin-bottom: 25px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid #dedbd4;
+          background: #f5f3ee;
+        }
+
+        .forgot-description {
+          margin: -18px 0 30px;
+          color: #666666;
+          font-size: 13px;
+          line-height: 1.8;
+        }
+
         .success-message,
         .error-message {
           margin-bottom: 25px;
@@ -550,6 +715,28 @@ export default function LoginPage() {
 
         .field input:focus {
           border-color: #111111;
+        }
+
+        .password-label-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 15px;
+        }
+
+        .forgot-link {
+          padding: 0;
+          border: 0;
+          background: transparent;
+          color: #555555;
+          font-size: 11px;
+          font-weight: 600;
+          text-decoration: underline;
+          cursor: pointer;
+        }
+
+        .forgot-link:hover {
+          color: #111111;
         }
 
         .password-field {
